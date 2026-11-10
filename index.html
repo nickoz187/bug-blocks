@@ -1,33 +1,513 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bug Blocks</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 2rem;
-        background: #f6f8fa;
-        color: #1f2937;
-      }
-      .card {
-        max-width: 700px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      }
-      h1 {
-        margin-top: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <h1>Bug Blocks</h1>
-      <p>Your HTML file has been uploaded to the repository.</p>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Block Bugs Math</title>
+<style>
+  :root{
+    --bg:#fff8ec; --ink:#2b2b2b; --muted:#6b6b6b; --card:#ffffff; --line:#e9dcc6;
+    --green:#22c55e; --green-d:#16a34a; --blue:#3b82f6; --yellow:#fde68a;
+    --seg:48px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+    touch-action:manipulation; -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    display:flex; flex-direction:column; min-height:100dvh;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 16px; background:#fff; border-bottom:4px solid var(--line);
+  }
+  header h1{margin:0;font-size:clamp(22px,4vw,34px);letter-spacing:.5px}
+  .hdr-right{display:flex;align-items:center;gap:10px}
+  .iconbtn{
+    font-size:28px; width:56px; height:56px; border-radius:16px; border:none;
+    background:var(--bg); box-shadow:0 4px 0 rgba(0,0,0,.15); cursor:pointer;
+  }
+  .iconbtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.15)}
+  .stars{font-size:clamp(22px,3.6vw,30px);font-weight:800;background:#fff3c4;padding:8px 14px;border-radius:16px}
+  .stars.bump{animation:bump .5s}
+  main{flex:1;display:flex;flex-direction:column}
+  .screen{display:none;flex:1;flex-direction:column;align-items:center;padding:16px;gap:16px}
+  .screen.active{display:flex}
+
+  /* Home */
+  .hello{font-size:clamp(30px,5vw,46px);font-weight:800;margin:8px 0 0}
+  .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:100%;max-width:820px}
+  .mode{
+    border:none;border-radius:26px;padding:20px 12px;min-height:150px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    color:#fff;font:inherit;box-shadow:0 7px 0 rgba(0,0,0,.2);
+  }
+  .mode:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+  .mode-emoji{font-size:44px}
+  .mode-name{font-size:clamp(24px,3.8vw,34px);font-weight:800}
+  .mode-sub{font-size:clamp(15px,2.4vw,20px);opacity:.95}
+  .m-build{background:#14b8a6}.m-add{background:#3b82f6}.m-three{background:#ec4899}.m-mult{background:#f97316}
+  .home-bugs{--seg:22px;display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-top:10px}
+
+  /* Game */
+  .prompt-row{display:flex;align-items:center;gap:14px;justify-content:center;width:100%;max-width:900px}
+  .speak{font-size:30px;width:64px;height:64px;flex:0 0 auto;border-radius:50%;border:none;background:var(--yellow);box-shadow:0 4px 0 rgba(0,0,0,.18);cursor:pointer}
+  .speak:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .prompt{font-size:clamp(32px,5.5vw,52px);font-weight:800;text-align:center}
+  .stage{
+    width:100%;max-width:1000px;min-height:34vh;background:#fff;border-radius:28px;border:4px solid var(--line);
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:calc(var(--seg)*.3);
+    padding:16px 10px;
+  }
+  .stage.rows{flex-direction:column;flex-wrap:nowrap;gap:calc(var(--seg)*.15)}
+  .plus{font-size:calc(var(--seg)*1.1);font-weight:800;color:var(--muted);line-height:1}
+  .equation{font-size:clamp(26px,4.6vw,42px);font-weight:800;text-align:center;min-height:1.3em}
+  .equation .sub{font-size:.72em;color:var(--muted)}
+  .equation .times{font-size:.62em;color:#8b5cf6;margin-top:4px}
+  .equation .hl{background:var(--yellow);border-radius:12px;padding:0 10px}
+  .equation .done{color:var(--green-d)}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;width:100%;max-width:900px}
+  .choices{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;width:100%}
+  .level-tag{font-size:16px;color:var(--muted);font-weight:700}
+
+  .btn{
+    font:inherit;font-weight:800;font-size:clamp(22px,3.4vw,30px);border:none;border-radius:20px;
+    padding:14px 24px;min-height:68px;min-width:68px;background:#fff;color:var(--ink);
+    box-shadow:0 5px 0 rgba(0,0,0,.18);cursor:pointer;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .btn:disabled{cursor:default}
+  .choice{font-size:clamp(36px,6.5vw,56px);min-width:120px;min-height:100px;border:4px solid var(--line)}
+  .choice.right{background:var(--green);color:#fff;border-color:var(--green-d)}
+  .faded{opacity:.3}
+  .next{background:var(--green);color:#fff;font-size:clamp(28px,4.6vw,40px);padding:16px 40px}
+  .big{background:var(--blue);color:#fff}
+  .minus{background:#fecaca}
+  .add{background:#bbf7d0}
+  .helper{background:var(--yellow)}
+
+  /* Bugs */
+  .bug{display:inline-flex;align-items:center;padding:calc(var(--seg)*.45) 0 calc(var(--seg)*.22)}
+  .body{display:flex;align-items:center}
+  .seg{
+    position:relative;width:var(--seg);height:var(--seg);margin-right:calc(var(--seg)*.06);
+    border-radius:calc(var(--seg)*.22);border:3px solid rgba(0,0,0,.18);
+    box-shadow:inset 0 calc(var(--seg)*-.1) 0 rgba(0,0,0,.12), inset 0 calc(var(--seg)*.08) 0 rgba(255,255,255,.35);
+  }
+  .seg.five{margin-left:calc(var(--seg)*.25)}
+  .seg::after{
+    content:'';position:absolute;bottom:calc(var(--seg)*-.2);left:32%;width:36%;height:calc(var(--seg)*.16);
+    background:#4b4b4b;border-radius:0 0 6px 6px;
+  }
+  .seg.pop{animation:pop .3s ease-out}
+  .head{
+    position:relative;width:calc(var(--seg)*1.4);height:calc(var(--seg)*1.4);border-radius:50%;
+    border:3px solid rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;
+    margin-left:calc(var(--seg)*.04);flex:0 0 auto;
+    box-shadow:inset 0 calc(var(--seg)*-.1) 0 rgba(0,0,0,.12);
+  }
+  .head::before,.head::after{
+    content:'';position:absolute;top:-30%;width:7%;height:36%;background:#4b4b4b;border-radius:6px;
+  }
+  .head::before{left:30%;transform:rotate(-22deg)}
+  .head::after{right:30%;transform:rotate(22deg)}
+  .eye{position:absolute;top:20%;width:24%;height:24%;background:#fff;border-radius:50%}
+  .eye::after{content:'';position:absolute;width:50%;height:50%;background:#222;border-radius:50%;top:28%;left:28%}
+  .eye.l{left:20%}.eye.r{right:20%}
+  .num{color:#fff;font-weight:900;font-size:calc(var(--seg)*.6);margin-top:calc(var(--seg)*.36);text-shadow:0 2px 0 rgba(0,0,0,.25);line-height:1}
+
+  .enter{animation:walkIn .55s ease-out both}
+  .pop{animation:pop .45s ease-out}
+  .happy{animation:hop .6s ease-in-out 2}
+  .wobble{animation:wobble .45s}
+  .waiting{opacity:.35}
+
+  @keyframes walkIn{from{transform:translateX(-40px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+  @keyframes wobble{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px) rotate(-3deg)}40%{transform:translateX(10px) rotate(3deg)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  @keyframes bump{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+
+  /* Effects */
+  #fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+  .conf{position:absolute;top:42vh;width:14px;height:14px;border-radius:3px;font-size:26px;animation:burst 1.5s ease-out forwards}
+  @keyframes burst{
+    0%{transform:translate(0,0) scale(.4);opacity:1}
+    30%{transform:translate(calc(var(--dx)*.5),-28vh) rotate(calc(var(--rot)*.4)) scale(1)}
+    100%{transform:translate(var(--dx),60vh) rotate(var(--rot));opacity:0}
+  }
+  .toast{
+    position:fixed;top:90px;left:50%;transform:translateX(-50%);z-index:60;
+    background:#8b5cf6;color:#fff;font-weight:800;font-size:32px;padding:14px 28px;border-radius:20px;
+    box-shadow:0 6px 0 rgba(0,0,0,.2);animation:pop .4s ease-out;
+  }
+  @media (max-width:560px){ .modes{grid-template-columns:1fr} .mode{min-height:120px} }
+</style>
+</head>
+<body>
+<header>
+  <button id="homeBtn" class="iconbtn" aria-label="Home">🏠</button>
+  <h1>Block Bugs</h1>
+  <div class="hdr-right">
+    <button id="voiceBtn" class="iconbtn" aria-label="Voice on or off">🔊</button>
+    <div id="stars" class="stars">⭐ <span id="starCount">0</span></div>
+  </div>
+</header>
+
+<main>
+  <section id="home" class="screen active">
+    <p class="hello">Pick a game!</p>
+    <div class="modes">
+      <button class="mode m-build" data-mode="build"><span class="mode-emoji">🧱</span><span class="mode-name">Build It</span><span class="mode-sub">Make the number</span></button>
+      <button class="mode m-add" data-mode="add"><span class="mode-emoji">🧲</span><span class="mode-name">Snap Together</span><span class="mode-sub">Add two bugs</span></button>
+      <button class="mode m-three" data-mode="three"><span class="mode-emoji">🐛</span><span class="mode-name">Three Bugs</span><span class="mode-sub">Add three bugs</span></button>
+      <button class="mode m-mult" data-mode="mult"><span class="mode-emoji">📋</span><span class="mode-name">Copy Machine</span><span class="mode-sub">Groups of bugs</span></button>
     </div>
-  </body>
+    <div id="homeBugs" class="home-bugs"></div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="prompt-row">
+      <button id="speakBtn" class="speak" aria-label="Read it to me">🔈</button>
+      <div id="prompt" class="prompt"></div>
+    </div>
+    <div id="stage" class="stage"></div>
+    <div id="equation" class="equation"></div>
+    <div id="controls" class="controls"></div>
+    <div id="levelTag" class="level-tag"></div>
+  </section>
+</main>
+
+<div id="fx"></div>
+
+<script>
+(function(){
+  // ---------- Characters (original "Block Bugs") ----------
+  var COLORS = {1:'#14b8a6',2:'#8b5cf6',3:'#ec4899',4:'#3b82f6',5:'#f97316',6:'#84cc16',7:'#06b6d4',8:'#f59e0b',9:'#ef4444',10:'#6366f1'};
+  var BIG = '#a855f7';
+  var NAMES = {1:'Pip',2:'Zuzu',3:'Mo',4:'Kiki',5:'Bix',6:'Lulu',7:'Nim',8:'Tavi',9:'Rufus',10:'Bea'};
+  function col(n){ return COLORS[n] || BIG; }
+
+  // ---------- Saved progress ----------
+  var KEY = 'blockbugs-v1';
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch(e){ return null; } }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+  var state = {stars:0, voice:true,
+    level:{build:1,add:1,three:1,mult:1},
+    streak:{build:0,add:0,three:0,mult:0}};
+  var saved = load();
+  if (saved) {
+    if (typeof saved.stars === 'number') state.stars = saved.stars;
+    if (typeof saved.voice === 'boolean') state.voice = saved.voice;
+    if (saved.level) for (var k in state.level) if (saved.level[k]) state.level[k] = saved.level[k];
+    if (saved.streak) for (var j in state.streak) if (typeof saved.streak[j] === 'number') state.streak[j] = saved.streak[j];
+  }
+  var MAXLV = {build:2, add:3, three:3, mult:3};
+  var current = {mode:null, speech:''};
+
+  // ---------- Elements ----------
+  var $ = function(id){ return document.getElementById(id); };
+  var homeEl=$('home'), gameEl=$('game'), stage=$('stage'), eqEl=$('equation'), controls=$('controls'),
+      promptEl=$('prompt'), levelTag=$('levelTag'), starCount=$('starCount'), starsBox=$('stars'),
+      voiceBtn=$('voiceBtn');
+
+  // ---------- Helpers ----------
+  function rand(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+  function shuffle(arr){ for (var i=arr.length-1;i>0;i--){ var r=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[r]; arr[r]=t; } return arr; }
+  function fill(n, v){ var a=[]; for (var i=0;i<n;i++) a.push(v); return a; }
+
+  function say(text, force){
+    if (!force && !state.voice) return;
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.9; u.pitch = 1.1;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function praise(){ return shuffle(['Great job!','You got it!','Awesome!','Super!','Way to go!'])[0]; }
+
+  function btn(label, cls, onClick){
+    var b = document.createElement('button');
+    b.className = 'btn ' + (cls || '');
+    b.innerHTML = label;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function plusSign(){ var p=document.createElement('div'); p.className='plus'; p.textContent='+'; return p; }
+
+  function makeBug(n, colors, opts){
+    opts = opts || {};
+    var bug = document.createElement('div'); bug.className = 'bug';
+    var body = document.createElement('div'); body.className = 'body';
+    for (var i=0;i<n;i++){
+      var s = document.createElement('div'); s.className = 'seg';
+      if (i>0 && i%5===0) s.classList.add('five');
+      s.style.background = Array.isArray(colors) ? colors[i] : colors;
+      body.appendChild(s);
+    }
+    bug.appendChild(body);
+    var head = document.createElement('div'); head.className = 'head';
+    head.style.background = opts.headColor || (Array.isArray(colors) ? colors[colors.length-1] : colors) || '#9ca3af';
+    var label = (opts.label !== undefined) ? opts.label : n;
+    head.innerHTML = '<span class="eye l"></span><span class="eye r"></span><span class="num">'+label+'</span>';
+    bug.appendChild(head);
+    return bug;
+  }
+
+  function fitSeg(segs, heads, extra){
+    var w = Math.max(280, stage.clientWidth - 30);
+    var units = segs*1.08 + heads*1.6 + (extra||0) + Math.floor(Math.max(0,segs-1)/5)*0.3 + 0.5;
+    var s = Math.floor(w / units);
+    s = Math.max(14, Math.min(64, s));
+    stage.style.setProperty('--seg', s+'px');
+  }
+
+  function choicesFor(ans){
+    var set = [ans];
+    var deltas = shuffle([-2,-1,1,2,3,-3]);
+    for (var i=0;i<deltas.length && set.length<3;i++){
+      var v = ans + deltas[i];
+      if (v>=1 && set.indexOf(v)===-1) set.push(v);
+    }
+    return shuffle(set);
+  }
+
+  function showChoices(ans, onRight){
+    var row = document.createElement('div'); row.className = 'choices';
+    choicesFor(ans).forEach(function(v){
+      var b = btn(String(v), 'choice', function(){
+        if (v === ans){
+          row.querySelectorAll('button').forEach(function(x){ x.disabled = true; });
+          b.classList.add('right');
+          onRight();
+        } else {
+          b.classList.add('wobble','faded');
+          b.disabled = true;
+          say('Try again!');
+        }
+      });
+      row.appendChild(b);
+    });
+    return row;
+  }
+
+  function setPrompt(text, speech){ promptEl.textContent = text; current.speech = speech || text; }
+
+  function updateStars(bump){
+    starCount.textContent = state.stars;
+    if (bump){ starsBox.classList.remove('bump'); void starsBox.offsetWidth; starsBox.classList.add('bump'); }
+  }
+  function updateVoice(){ voiceBtn.textContent = state.voice ? '🔊' : '🔇'; }
+  function updateLevelTag(){ if (current.mode) levelTag.textContent = 'Level ' + state.level[current.mode]; }
+
+  function confetti(){
+    var fx = $('fx');
+    var pal = ['#14b8a6','#8b5cf6','#ec4899','#3b82f6','#f97316','#84cc16','#f59e0b'];
+    for (var i=0;i<32;i++){
+      var p = document.createElement('span'); p.className = 'conf';
+      if (Math.random() < 0.35){ p.textContent = '⭐'; p.style.width='auto'; p.style.height='auto'; }
+      else { p.style.background = pal[i % pal.length]; }
+      p.style.left = (50 + (Math.random()*30-15)) + 'vw';
+      p.style.setProperty('--dx', (Math.random()*80-40) + 'vw');
+      p.style.setProperty('--rot', (Math.random()*720-360) + 'deg');
+      p.style.animationDelay = (Math.random()*0.15) + 's';
+      fx.appendChild(p);
+      (function(el){ setTimeout(function(){ el.remove(); }, 1800); })(p);
+    }
+  }
+  function toast(text){
+    var t = document.createElement('div'); t.className = 'toast'; t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 1800);
+  }
+
+  function win(mode, eqHTML){
+    state.stars++;
+    state.streak[mode]++;
+    var leveled = false;
+    if (state.streak[mode] >= 4 && state.level[mode] < MAXLV[mode]){
+      state.level[mode]++; state.streak[mode] = 0; leveled = true;
+    }
+    save();
+    updateStars(true);
+    confetti();
+    say(leveled ? 'Level up! ' + praise() : praise());
+    if (leveled) toast('Level up! ⬆️');
+    if (eqHTML) eqEl.innerHTML = eqHTML;
+    controls.innerHTML = '';
+    controls.appendChild(btn('Next ➜', 'next', startRound));
+    updateLevelTag();
+  }
+
+  // ---------- Screens ----------
+  function showHome(){
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+    gameEl.classList.remove('active'); homeEl.classList.add('active');
+    current.mode = null;
+  }
+  function startMode(mode){
+    current.mode = mode;
+    homeEl.classList.remove('active'); gameEl.classList.add('active');
+    startRound();
+  }
+  function startRound(){
+    stage.innerHTML = ''; eqEl.innerHTML = ''; controls.innerHTML = '';
+    stage.className = 'stage';
+    ({build:roundBuild, add:roundAdd, three:roundThree, mult:roundMult})[current.mode]();
+    updateLevelTag();
+  }
+
+  // ---------- Mode 1: Build It ----------
+  function roundBuild(){
+    var lv = state.level.build;
+    var t = lv === 1 ? rand(1,5) : rand(3,10);
+    var cur = 0;
+    setPrompt('Make ' + t + '!', 'Make ' + t + '. Add blocks until you have ' + t + '.');
+    fitSeg(12, 1, 0);
+    var bug;
+    function draw(pop){
+      stage.innerHTML = '';
+      bug = makeBug(cur, col(t), {label:'?', headColor: col(t)});
+      if (pop && cur > 0) bug.querySelector('.body').lastChild.classList.add('pop');
+      stage.appendChild(bug);
+    }
+    draw(false);
+    var addB = btn('➕ Add', 'add', function(){ if (cur < 12){ cur++; eqEl.textContent=''; draw(true); } });
+    var minB = btn('➖ Take off', 'minus', function(){ if (cur > 0){ cur--; eqEl.textContent=''; draw(false); } });
+    var doneB = btn('✅ Done!', 'big', function(){
+      if (cur === t){
+        stage.innerHTML = '';
+        var b = makeBug(t, col(t));
+        b.classList.add('happy');
+        stage.appendChild(b);
+        win('build', '<b>' + t + '</b> blocks! This is ' + NAMES[t] + '!');
+      } else {
+        bug.classList.remove('wobble'); void bug.offsetWidth; bug.classList.add('wobble');
+        var msg = cur < t ? 'Need more blocks!' : 'Too many blocks!';
+        eqEl.textContent = msg;
+        say(msg + ' Count again.');
+      }
+    });
+    controls.append(minB, addB, doneB);
+  }
+
+  // ---------- Mode 2: Snap Together ----------
+  function roundAdd(){
+    var lv = state.level.add, a, b;
+    if (lv === 1){ a = rand(1,5); b = rand(1,5); }
+    else if (lv === 2){ do { a = rand(1,9); b = rand(1,9); } while (a+b > 10); }
+    else { do { a = rand(2,9); b = rand(2,9); } while (a+b <= 10); }
+    var s = a + b;
+    fitSeg(s, 2, 1.5);
+    var A = makeBug(a, col(a)), B = makeBug(b, col(b));
+    A.classList.add('enter'); B.classList.add('enter'); B.style.animationDelay = '.15s';
+    stage.append(A, plusSign(), B);
+    setPrompt(a + ' + ' + b + ' = ?', 'What is ' + a + ' plus ' + b + '?');
+    var snapped = false, snapBtn;
+    function snap(){
+      if (snapped) return;
+      snapped = true;
+      fitSeg(s, 1, 0);
+      stage.innerHTML = '';
+      var M = makeBug(s, fill(a, col(a)).concat(fill(b, col(b))), {headColor: col(s)});
+      M.classList.add('pop');
+      stage.appendChild(M);
+      if (snapBtn) snapBtn.remove();
+    }
+    var choices = showChoices(s, function(){ snap(); win('add', a + ' + ' + b + ' = <b>' + s + '</b>'); });
+    snapBtn = btn('🧲 Snap them!', 'helper', snap);
+    controls.append(choices, snapBtn);
+  }
+
+  // ---------- Mode 3: Three Bugs ----------
+  function roundThree(){
+    var lv = state.level.three, hi = [0,3,4,5][lv];
+    var a = rand(1,hi), b = rand(1,hi), c = rand(1,hi);
+    var s1 = a + b, t = s1 + c;
+    fitSeg(t, 3, 3);
+    var A = makeBug(a, col(a)), B = makeBug(b, col(b)), C = makeBug(c, col(c));
+    [A,B,C].forEach(function(x,i){ x.classList.add('enter'); x.style.animationDelay = (i*.15)+'s'; });
+    C.classList.add('waiting');
+    var p2 = plusSign(); p2.classList.add('waiting');
+    stage.append(A, plusSign(), B, p2, C);
+    eqEl.innerHTML = '<span class="hl">' + a + ' + ' + b + '</span> + ' + c;
+    setPrompt(a + ' + ' + b + ' = ?', 'First, what is ' + a + ' plus ' + b + '?');
+    var abColors = fill(a, col(a)).concat(fill(b, col(b)));
+    controls.appendChild(showChoices(s1, function(){
+      say('Yes! Now add ' + c + '.');
+      fitSeg(t, 2, 1.5);
+      stage.innerHTML = '';
+      var M = makeBug(s1, abColors, {headColor: col(s1)});
+      M.classList.add('pop');
+      C.classList.remove('waiting','enter'); C.style.animationDelay = '';
+      stage.append(M, plusSign(), C);
+      eqEl.innerHTML = '<span class="done">' + s1 + '</span> + <span class="hl">' + c + '</span>';
+      setPrompt(s1 + ' + ' + c + ' = ?', 'Now, what is ' + s1 + ' plus ' + c + '?');
+      setTimeout(function(){
+        controls.innerHTML = '';
+        controls.appendChild(showChoices(t, function(){
+          fitSeg(t, 1, 0);
+          stage.innerHTML = '';
+          var all = makeBug(t, abColors.concat(fill(c, col(c))), {headColor: col(t)});
+          all.classList.add('pop');
+          stage.appendChild(all);
+          win('three', a + ' + ' + b + ' + ' + c + ' = <b>' + t + '</b>');
+        }));
+      }, 500);
+    }));
+  }
+
+  // ---------- Mode 4: Copy Machine ----------
+  function roundMult(){
+    var lv = state.level.mult, g, m;
+    if (lv === 1){ g = 2; m = rand(1,3); }
+    else if (lv === 2){ g = rand(2,3); m = rand(2,4); }
+    else { g = rand(2,4); m = rand(2,5); }
+    var t = g * m, copies = 1, color = col(m);
+    stage.classList.add('rows');
+    fitSeg(Math.max(m, 6), 1, 0);
+    function addRow(){ var b = makeBug(m, color); b.classList.add('enter'); stage.appendChild(b); }
+    function eqText(){ return fill(copies, m).join(' + '); }
+    function groupsText(){ return copies + ' group' + (copies > 1 ? 's' : '') + ' of ' + m; }
+    function upd(){ eqEl.innerHTML = '<div>' + groupsText() + '</div><div class="sub">' + eqText() + '</div>'; }
+    addRow(); upd();
+    setPrompt('Make ' + g + ' groups of ' + m + '!', 'Make ' + g + ' groups of ' + m + '. Tap copy!');
+    var copyBtn = btn('📋 Copy!', 'big', function(){
+      if (copies >= g) return;
+      copies++; addRow(); upd(); say(groupsText());
+      if (copies === g){ copyBtn.remove(); ask(); }
+    });
+    controls.appendChild(copyBtn);
+    function ask(){
+      setPrompt('How many blocks in all?', g + ' groups of ' + m + '. How many blocks in all?');
+      controls.appendChild(showChoices(t, function(){
+        stage.querySelectorAll('.bug').forEach(function(b){ b.classList.add('happy'); });
+        win('mult', '<div>' + g + ' groups of ' + m + ' = <b>' + t + '</b></div>' +
+                    '<div class="sub">' + eqText() + ' = ' + t + '</div>' +
+                    '<div class="times">' + g + ' × ' + m + ' = ' + t + '</div>');
+      }));
+    }
+  }
+
+  // ---------- Wiring ----------
+  document.querySelectorAll('.mode').forEach(function(b){
+    b.addEventListener('click', function(){ startMode(b.getAttribute('data-mode')); });
+  });
+  $('homeBtn').addEventListener('click', showHome);
+  $('speakBtn').addEventListener('click', function(){ say(current.speech, true); });
+  voiceBtn.addEventListener('click', function(){ state.voice = !state.voice; save(); updateVoice(); });
+
+  var hb = $('homeBugs');
+  [1,2,3,4,5].forEach(function(n,i){ var b = makeBug(n, col(n)); b.classList.add('enter'); b.style.animationDelay = (i*.1)+'s'; hb.appendChild(b); });
+
+  updateStars(false);
+  updateVoice();
+})();
+</script>
+</body>
 </html>
